@@ -1,9 +1,7 @@
-package sudokuSolver;
-
 import java.util.*;
 import java.util.Map.Entry;
 import java.io.*;
-
+/*This class is used by PlaySudoky class, do not run this. The main method is empty for this class*/
 public class sudokuSolver{
 	static String rows = "123456789";
 	static String cols = "ABCDEFGHI";
