@@ -1,8 +1,6 @@
-package sudokuSolver;
-
 import java.io.*;
 import java.util.*;
-
+/*Run this file to solve the sudoku*/
 public class PlaySudoku {
 	static String rows = "123456789";
 	static String cols = "ABCDEFGHI";
