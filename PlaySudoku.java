@@ -1,4 +1,4 @@
-package sudokuTry;
+package sudokuSolver;
 
 import java.io.*;
 import java.util.*;
@@ -7,6 +7,10 @@ public class PlaySudoku {
 	static String rows = "123456789";
 	static String cols = "ABCDEFGHI";
 	public static void printForGame(Map<String, String> solution) {
+		if(solution.isEmpty()){
+			System.out.println("\n Null Values");
+			return;
+		}
         for (int i = 0; i < 9; ++i) {
             if (i % 3 == 0)
                 System.out.println(" -----------------------");
@@ -26,7 +30,7 @@ public class PlaySudoku {
 		while(true){
 			try{
 				System.out.println("----Welcome to Sudoku Solver----\n\n");
-				System.out.println("Select your option : \n1\t:\tGet solution to a puzzle\n0\t:\tExit\nYour Choice  :  ");
+				System.out.print("Select your option : \n1\t:\tGet solution to a puzzle\n0\t:\tExit\nYour Choice  :  ");
 				String input = br.readLine();
 				while(input.length() == 0){
 					System.out.println("Enter valid choice from above menu : ");
@@ -38,7 +42,7 @@ public class PlaySudoku {
 					System.exit(1);
 				}
 				else if(value==1){
-					System.out.println("Please enter the path of Sudoku Puzzle file (*.csv format)");
+					System.out.print("Please enter the path of Sudoku Puzzle file (*.csv format)\n... :  ");
 					String fileName = br.readLine();
 					sudokuSolver a = new sudokuSolver(fileName);
 					fileName = fileName.replace(".csv", "Solution.csv");
