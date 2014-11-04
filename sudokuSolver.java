@@ -1,3 +1,7 @@
+/**
+ * Author : Aishanee Shah
+ * SudokuSolver.java class which is used in the parent class PlaySudoku.java.
+ * **/
 package sudokuTry;
 
 import java.util.*;
