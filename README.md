@@ -6,7 +6,7 @@ Applicant : Aishanee Shah
 
 Application for Insight Data Engineering January 2015
 
--- Compile the package SudokuTry
+-- Compile the package SudokuSolver
 
 -- Run the java file PlaySudoku.java
 
