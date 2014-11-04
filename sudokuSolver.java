@@ -8,6 +8,7 @@ public class sudokuSolver{
 	static String rows = "123456789";
 	static String cols = "ABCDEFGHI";
 	Map<String, String> sudokuGrid = new HashMap<String, String>();
+	Map<String, String> finalSolution = new HashMap<String, String>();
 	Map<String, String> initSolution = new HashMap<String, String>();
 	Map<String, String[]> peers = new HashMap<String, String[]>();
 	Map<String, String[]> rowUnit = new HashMap<String, String[]>();
@@ -62,7 +63,7 @@ public class sudokuSolver{
 		}
 		return retString;
 	}
-	public static void printSudoku(Map<String,String> printSudokuGrid){
+	public void printSudoku(Map<String,String> printSudokuGrid){
 		for(int i=0;i<9;i++){
 			for(int j=0 ; j<9 ; j++){
 				System.out.printf(String.format("%-10s",printSudokuGrid.get(""+rows.charAt(i)+cols.charAt(j))));
@@ -75,76 +76,113 @@ public class sudokuSolver{
 		for(int i = 0; i<9 ; i++){
 			int j;
 			for(j = 0; j<8 ; j++){
-				writer.append(this.initSolution.get(""+rows.charAt(i)+cols.charAt(j)));
+				writer.append(this.finalSolution.get(""+rows.charAt(i)+cols.charAt(j)));
 				writer.append(",");
 			}
-			writer.append(this.initSolution.get(""+rows.charAt(i)+cols.charAt(j)));
+			writer.append(this.finalSolution.get(""+rows.charAt(i)+cols.charAt(j)));
 			writer.append("\n");
 		}
 		writer.flush();
 		writer.close();
 	}
 	public Map<String, String> solveSudoku(Map<String, String> presentSudoku, Map<String, String> presentSolution) throws IOException{
-		System.out.println("Entered solveSudoku");
 		for(Entry<String, String> s : presentSolution.entrySet()){
 			if( presentSudoku.get(s.getKey()).length()==1 && !presentSudoku.get(s.getKey()).equals("0")){
 				presentSolution = removeFromPeers(presentSolution,s.getKey(),presentSudoku.get(s.getKey()));
 			}
 		}
-		for(Entry<String,String> s: presentSolution.entrySet()){
+		presentSolution = rule2Implementation(presentSolution);
+		return (presentSolution);
+	}
+	public Map<String, String> rule2Implementation(Map<String, String> grid){
+		for(Entry<String,String> s: grid.entrySet()){
 			int len;
 			String key;
-			if((len = (key = presentSolution.get(s.getKey())).length())!=1){
+			if((len = (key = grid.get(s.getKey())).length())!=1){
 				for(int i = 0 ; i< len ;i++){
-					if(this.isUniqueInPeers(presentSolution,s.getKey(),key.charAt(i))){
-						presentSolution.put(s.getKey(), ""+key.charAt(i));
+					if(this.isUniqueInPeers(grid,s.getKey(),key.charAt(i))){
+						grid = this.assign(grid,s.getKey(),key.charAt(i));
 					}
 				}
 			}
 		}
-		return presentSolution;
+		return grid;
 	}
 	public void solutionFinder(Map<String, String> sudokuGrid) throws IOException{
-		System.out.println("Entered solutionFinder");
 		Map<String, String> initSolution = new HashMap<String, String>();
 		for (Entry<String, String> s : this.sudokuGrid.entrySet()){
 			initSolution.put(s.getKey(), rows);
 		}
 		Map<String, String> basic = solveSudoku(sudokuGrid, initSolution);
-		while(!this.sudokuSolved(basic)){
-			basic = searchSudoku(basic);
-			printSudoku(basic);
+		Map<String, String> newBasic = null;
+		while(!basic.equals(newBasic)){
+			newBasic = this.getCopy(basic);
+			basic = solveSudoku(basic, basic);
 		}
-		printSudoku(basic);
+		if(solveUsingSearch(basic)){
+			return;
+		}
 	}
-	public Map<String, String> searchSudoku(Map<String, String> presentSolution) throws IOException{
-		System.out.println("Entered searchSudoku");
-		while(!this.sudokuSolved(presentSolution)){
-			int len1;
-			int minLen = 9;
-			Entry<String, String> searchWith = presentSolution.entrySet().iterator().next();
-			for(Entry<String, String> s1 : presentSolution.entrySet()){
-				if((len1  = presentSolution.get(s1.getKey()).length())>1 && len1 < minLen){
-					minLen = len1;
-					searchWith = s1;
-				}
+	public boolean solveUsingSearch(Map<String, String> grid) throws IOException{
+		if(sudokuSolved(grid)){
+			this.finalSolution = grid;
+			return true;
+		}
+		int minLen = 9;
+		int len;
+		Entry<String, String> searchWith = null;
+		for(Entry<String, String> s: grid.entrySet()){
+			if(( len = grid.get(s.getKey()).length()) != 1 && len < minLen){
+				minLen = len;
+				searchWith = s;
 			}
-			System.out.println(minLen + searchWith.getKey() + searchWith.getValue());
-//			for(int i =0;i < minLen ; i++){
-				presentSolution.put(presentSolution.get(searchWith.getKey()),""+presentSolution.get(searchWith.getValue()).charAt(0));
-				presentSolution = this.solveSudoku(presentSolution, presentSolution);
-				System.exit(1);
-//			}
-			
+			if(minLen == 2)
+				break;
 		}
-		return presentSolution;
+		int i = 0;
+		while(i<minLen){
+			Map<String, String> newGrid = this.getCopy(grid);
+			newGrid = assign(newGrid, searchWith.getKey(), searchWith.getValue().charAt(i));
+			newGrid = solveSudoku(newGrid, newGrid);
+			Map<String, String> newBasic = null;
+			while(!newGrid.equals(newBasic)){
+				newBasic = this.getCopy(newGrid);
+				newGrid = solveSudoku(newGrid, newGrid);
+			}
+			int flag= 0;
+			for(Entry<String, String> s : newGrid.entrySet()){
+				if(newGrid.get(s.getKey()).length() == 0)
+					flag = 1;
+			}
+			if(flag == 0){
+				if(!solveUsingSearch(newGrid))
+					i++;
+				else
+					return true;
+			}
+			else{
+				i++;
+			}
+		}
+		return false;
 	}
-	public boolean sudokuSolved(Map<String, String> sudokuCandidate){
+	public Map<String, String> getCopy(Map<String, String> grid){
+		Map<String, String> Newgrid = new HashMap<String, String>();
+		for(Entry<String, String> s : grid.entrySet()){
+			Newgrid.put(s.getKey(), s.getValue());
+		}
+		return Newgrid;
+	}
+	public Map<String,String> assign(Map<String, String> grid, String key, char value){
+		grid.put(key, ""+value);
+		grid = this.removeFromPeers(grid,key,""+value);
+		return rule2Implementation(grid);
+	}
+	public static boolean sudokuSolved(Map<String, String> sudokuCandidate){
 		for(Entry<String, String> s : sudokuCandidate.entrySet()){
-			if(sudokuCandidate.get(s.getKey()).length()!=1)
+			if(s.getValue().length()!=1)
 				return false;
 		}
-		System.exit(1);
 		return true;
 	}
 	public boolean isUniqueInPeers(Map<String,String> gridVal, String location, char value){
@@ -184,19 +222,6 @@ public class sudokuSolver{
 		}
 		return gridVal;
 	}
-    
-	
 	public static void main(String[] args) throws IOException {
-	   sudokuSolver a = new sudokuSolver("C:/Users/Aishanee/workspace/sudokuTry/src/sudokuTry/file2.csv");
-	   System.out.println("The Sudoku Puzzle read from file : ");
-	   System.out.println("The solution to the puzzle : ");
-//	   Map<String, String> newstuff = new HashMap<String,String>();
-	   a.solutionFinder(a.sudokuGrid);
-	   System.out.println("Came out..");
-//	   Map<String, String> newstuff = new HashMap<String, String>();
-//	   newstuff = a.initSolution;
-//	   a.exportCSV("C:/Users/Aishanee/workspace/sudokuTry/src/sudokuTry/file1solution.csv");
-   }
+	}
 }
-//BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
-//String input = br.readLine();
